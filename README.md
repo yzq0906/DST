@@ -41,7 +41,7 @@ cd "C:\Users\82235\WorkBuddy\2026-11-04-11-10-29"
 python deploy\deploy.py
 ```
 
-脚本会自动打开**已预填验证码**的 GitHub 授权页，你只需点一下 **Authorize**，剩下的（传文件、开 Pages、建 Release、传 exe、验证）全部自动完成。首次成功后会把授权记到本机 `deploy/.token`，**以后部署不用再点**；删除该文件即可撤销本机授权，也可在 GitHub → Settings → Applications 里撤销。token 不会打印，也不会上传。
+脚本会自动打开**已预填验证码**的 GitHub 授权页，你只需点一下 **Authorize**，剩下的（传文件、开 Pages、建 Release、传 exe、验证）全部自动完成。验证码 15 分钟过期会**自动续新码并重新打开页面**（累计约 2 小时），不用手动重来。首次成功后会把授权记到本机 `deploy/.token`，**以后部署不用再点**；删除该文件即可撤销本机授权，也可在 GitHub → Settings → Applications 里撤销。token 不会打印，也不会上传。
 
 如果已经有 PAT，也可以 `$env:GITHUB_TOKEN="ghp_xxx"` 或写进 `deploy/.token`，这样跳过授权页直接部署。**`.token` 千万不要提交到仓库。**
 
@@ -80,20 +80,25 @@ APP_RELEASES_URL = 'https://github.com/yzq0906/DST/releases/latest'
 
 改完 `VERSION_URL` 需要重新打包 exe，用户端才会指向新的更新源。`APP_RELEASES_URL` 是更新提示里「发布页」按钮的目标，一般不用动。
 
-## 当前部署状态（2026-11-09）
+## 当前部署状态（2026-11-09 已全部完成）
 
 | 项 | 结果 |
 |---|---|
 | Pages | 已开启，main / (root)，`https://yzq0906.github.io/DST/version.json` 返回 200 |
-| Release | `V2.8.0` 已创建，资产 `V2.8.0.exe`（29.7 MB） |
-| 下载页 | `https://yzq0906.github.io/DST/` 返回 200 |
-| 历史版本 | 在线下载页 `https://dicalc-history.app.workbuddy.host/?sharecode=WMLSROEL2A`，含 V2.7.0 / V2.6.0 / V2.5.0 三个 exe，逐条实测 200 |
+| 版本信息 | `V2.8.0`、6 条更新日志；`url` 指向 `.../V2.8.0/V2.8.0.exe`，HEAD 200 |
+| 正式版 Release | `V2.8.0`（29.7 MB），`/releases/latest` 正确指向它 |
+| 历史 Release | `V2.7.0` / `V2.6.0` / `V2.5.0` 均已建并标记 Pre-release，各带一个 exe |
+| 下载页 | `https://yzq0906.github.io/DST/` 返回 200，历史版本列表指向 GitHub Release |
+| 备用下载页 | `https://dicalc-history.app.workbuddy.host/?sharecode=WMLSROEL2A`（国内加速，含三个旧版 exe） |
+| 本机授权 | `deploy/.token` 已保存，此后部署无需再点授权 |
 
-### 历史版本为什么放在独立下载页
+四个 Release 的下载直链全部实测可用；V2.8.0 资产与本地最新 exe 做过头 / 中 / 尾三段比对，内容完全一致。软件端 `_read_feed()` 也实测能从线上读到 `V2.8.0` 与正确下载地址。
 
-把历史 exe 补进 GitHub Release 需要一次 GitHub 写入授权（设备码 14 分钟内有效，两次都过期未确认），所以先用内置的站点发布能力把三个版本做成了独立下载页，**零授权、已上线可用**。
+### 两个已修掉的坑
 
-- 站点源文件：`deploy/history/`（`index.html` + 三个 `V<版本>.exe`）。
-- 托管站点要求静态资源也带 `sharecode`，裸路径返回 403；`index.html` 里用一小段脚本把当前地址的 `sharecode` 自动补到下载链接上，重新发布换码也不会失效。
-- `index.html`（GitHub Pages 那份）的「历史版本」区块已改为指向这个在线下载页，避免死链；等哪天完成一次授权、把新版页面推上去即可生效。
-- 想把三个历史版本也补进 GitHub Release 时，运行 `python deploy\deploy_history.py`（点一次 Authorize，之后会记住授权），脚本会自动建 Release、传 exe、覆盖 V2.8.0 资产并同步线上文件。
+1. **中文资产名会被 GitHub 吞掉**（见上文）：上传接口把 `地算通V2.8.0.exe` 变成 `V2.8.0.exe`，按中文名拼的直链就是 404。所有资产名统一纯 ASCII。
+2. **删除旧资产的端点**：正确写法是 `DELETE /repos/{owner}/{repo}/releases/assets/{asset_id}`，**不带 release_id**。写成 `/releases/{rid}/assets/{asset_id}` 会返回 404，旧资产没删掉就会 `422 already_exists`。`deploy.py` 与 `deploy_history.py` 都已修正，现在覆盖同名资产正常。
+
+### 国内下载速度
+
+GitHub Releases 的 CDN 在国内实测约 100 KB/s，30 MB 需要数分钟；`index.html` 里保留了国内加速下载页入口。若用户群主要在国内，发新版时也可以把 `version.json` 的 `url` 指向加速页上的 exe。
