@@ -1,11 +1,14 @@
 # 地算通 · 版本更新源
 
-这个仓库用来给桌面软件「地算通」提供**版本更新通知**，用 GitHub Pages 免费托管，不需要服务器。
+这个仓库用来给桌面软件「地算通」提供**版本更新通知**，用 GitHub Pages 免费托管，不需要服务器。当前正式版 **V2.8.1**。
 
 | 文件 | 作用 |
 |---|---|
 | `version.json` | 软件启动时读取的版本信息（版本号、日期、更新日志、下载地址） |
 | `index.html` | 用户访问站点时看到的下载页 |
+| `地算通.py` | 软件源码（与线上安装包同一份） |
+| `build/version_info.txt` | exe 文件属性里的版本资源 |
+| `build/地算通V2.8.1.spec` | PyInstaller 打包配置 |
 | `.nojekyll` | 让 Pages 原样发布文件，跳过 Jekyll 构建 |
 | `deploy.py` | 一键部署脚本（传文件、开 Pages、建 Release、传 exe、验证） |
 
@@ -45,7 +48,7 @@ python deploy\deploy.py
 
 如果已经有 PAT，也可以 `$env:GITHUB_TOKEN="ghp_xxx"` 或写进 `deploy/.token`，这样跳过授权页直接部署。**`.token` 千万不要提交到仓库。**
 
-脚本会依次完成：上传站点文件 → 开启 Pages → 创建 Release 并上传 `../dist/地算通V2.8.0.exe`（Release 资产名用 `V2.8.0.exe`）→ 等待 Pages 生效并实测 `/DST/`、`/dst/` 哪个路径可用。可重复运行。发新版时记得同步修改脚本顶部的 `TAG` 与 `ASSET_NAME`。
+脚本会依次完成：上传站点文件 + 源码与构建配置 → 开启 Pages → 创建 `TAG` 对应 Release 并上传 `dist/地算通V2.8.1.exe`（Release 资产名 `V2.8.1.exe`）→ 等待 Pages 生效并实测 `/DST/`、`/dst/` 哪个路径可用。可重复运行。发新版时同步修改脚本顶部的 `TAG`、`EXE_NAME` 与 `SRC_FILES` 里的 spec 路径。
 
 Token 权限：classic PAT 勾 `repo`；或 fine-grained PAT 给本仓库的 **Contents / Pages / Releases** 读写权限。
 
@@ -55,15 +58,9 @@ Token 权限：classic PAT 勾 `repo`；或 fine-grained PAT 给本仓库的 **C
 python deploy\deploy_history.py
 ```
 
-同样走设备授权（或 `GITHUB_TOKEN` / `.token`），一次授权会把这些事全部做完：
+这是一次性补传脚本（V2.7.0 / V2.6.0 / V2.5.0 三个历史 Release 已建好并标记为 Pre-release），**平时发新版不需要运行**。它会复用已有 Release、覆盖同名资产、同步站点文件并逐个校验下载直链。要补更多历史版本（V2.4 / V2.3 / V2.2 / V2.1 的 exe 也都还在 `dist/`），改脚本顶部的 `HISTORY` 列表再跑一次即可。
 
-1. 为 `V2.7.0` / `V2.6.0` / `V2.5.0` 各建一个 Release 并上传对应 exe（资产名 `V2.7.0.exe` 等）；
-2. 三个历史版本标记为 **Pre-release**，保证 `/releases/latest` 仍指向正式版 `V2.8.0`；
-3. 用本地最新的 `dist/地算通V2.8.0.exe` 覆盖 `V2.8.0` Release 里的旧资产；
-4. 同步修正线上 `version.json` 的下载直链、`index.html` 的历史版本列表、`README.md`；
-5. 逐个 HEAD 校验下载直链，并确认 `/releases/latest` 没跑偏。
-
-要补更多历史版本（V2.4 / V2.3 / V2.2 / V2.1 的 exe 也都还在 `dist/`），改脚本顶部的 `HISTORY` 列表再跑一次即可，已存在的 Release 会自动复用。
+> 历史版本必须标记为 **Pre-release**，否则 `/releases/latest` 可能指向旧版。当前 `/releases/latest` 指向正式版 `V2.8.1`。
 
 ## 软件端配置
 
@@ -80,19 +77,20 @@ APP_RELEASES_URL = 'https://github.com/yzq0906/DST/releases/latest'
 
 改完 `VERSION_URL` 需要重新打包 exe，用户端才会指向新的更新源。`APP_RELEASES_URL` 是更新提示里「发布页」按钮的目标，一般不用动。
 
-## 当前部署状态（2026-11-09 已全部完成）
+## 当前部署状态（2026-11-10 已全部完成）
 
 | 项 | 结果 |
 |---|---|
 | Pages | 已开启，main / (root)，`https://yzq0906.github.io/DST/version.json` 返回 200 |
-| 版本信息 | `V2.8.0`、6 条更新日志；`url` 指向 `.../V2.8.0/V2.8.0.exe`，HEAD 200 |
-| 正式版 Release | `V2.8.0`（29.7 MB），`/releases/latest` 正确指向它 |
-| 历史 Release | `V2.7.0` / `V2.6.0` / `V2.5.0` 均已建并标记 Pre-release，各带一个 exe |
+| 版本信息 | `V2.8.1`、2 条更新日志；`url` 指向 `.../V2.8.1/V2.8.1.exe` |
+| 正式版 Release | `V2.8.1`（最新）与 `V2.8.0`，`/releases/latest` 正确指向 `V2.8.1` |
+| 历史 Release | `V2.7.0` / `V2.6.0` / `V2.5.0` 均为 Pre-release，各带一个 exe |
+| 仓库文件 | `地算通.py`、`build/version_info.txt`、`build/地算通V2.8.1.spec` 已同步 |
 | 下载页 | `https://yzq0906.github.io/DST/` 返回 200，历史版本列表指向 GitHub Release |
-| 备用下载页 | `https://dicalc-history.app.workbuddy.host/?sharecode=WMLSROEL2A`（国内加速，含三个旧版 exe） |
+| 备用下载页 | `https://dicalc-history.app.workbuddy.host/?sharecode=WMLSROEL2A`（国内加速，含最新版与历史版本） |
 | 本机授权 | `deploy/.token` 已保存，此后部署无需再点授权 |
 
-四个 Release 的下载直链全部实测可用；V2.8.0 资产与本地最新 exe 做过头 / 中 / 尾三段比对，内容完全一致。软件端 `_read_feed()` 也实测能从线上读到 `V2.8.0` 与正确下载地址。
+版权声明文字已从软件界面、帮助文档、exe 文件属性与下载页移除，作者姓名与联系方式按需求保留。
 
 ### 两个已修掉的坑
 
