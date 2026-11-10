@@ -1,0 +1,50 @@
+# -*- coding: utf-8 -*-
+# Windows 文件属性（右键 → 属性 → 详细信息）版本资源
+# 与 地算通.py 顶部 APP_* 常量保持一致：V2.8.1 / 杨志秋
+# 说明：ffi.filevers 必须是四段数字（Windows 内部比较用），
+#       属性页显示的是 StringFileInfo 中的 FileVersion / ProductVersion 字符串。
+#       LegalCopyright 保持空白：软件内与发布页均不显示版权声明。
+
+VSVersionInfo(
+    ffi=FixedFileInfo(
+        filevers=(2, 8, 1, 0),
+        prodvers=(2, 8, 1, 0),
+        mask=0x3f,
+        flags=0x0,
+        OS=0x40004,
+        fileType=0x1,
+        subtype=0x0,
+        date=(0, 0),
+    ),
+    kids=[
+        StringFileInfo([
+            # 简体中文（0x0804）+ Unicode（1200）
+            StringTable(
+                '080404B0',
+                [StringStruct('CompanyName', '杨志秋'),
+                 StringStruct('FileDescription', '地算通 · 地质测量计算工具'),
+                 StringStruct('FileVersion', 'V2.8.1'),
+                 StringStruct('InternalName', '地算通'),
+                 StringStruct('LegalCopyright', ''),
+                 StringStruct('LegalTrademarks', ''),
+                 StringStruct('OriginalFilename', '地算通V2.8.1.exe'),
+                 StringStruct('ProductName', '地算通'),
+                 StringStruct('ProductVersion', 'V2.8.1'),
+                 StringStruct('Comments', '地质测量计算工具 · 29 项常用计算')]),
+            # 英文（0x0409）+ Unicode，供非中文环境或第三方工具读取
+            StringTable(
+                '040904B0',
+                [StringStruct('CompanyName', 'Yang Zhiqiu'),
+                 StringStruct('FileDescription', 'Dicalc - Geological Survey Calculator'),
+                 StringStruct('FileVersion', 'V2.8.1'),
+                 StringStruct('InternalName', 'Dicalc'),
+                 StringStruct('LegalCopyright', ''),
+                 StringStruct('LegalTrademarks', ''),
+                 StringStruct('OriginalFilename', 'DicalcV2.8.1.exe'),
+                 StringStruct('ProductName', 'Dicalc'),
+                 StringStruct('ProductVersion', 'V2.8.1'),
+                 StringStruct('Comments', 'Geological survey calculator with 29 tools')]),
+        ]),
+        VarFileInfo([VarStruct('Translation', [2052, 1200, 1033, 1200])]),
+    ],
+)
